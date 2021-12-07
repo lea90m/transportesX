@@ -2,7 +2,7 @@ var express = require ('express');
 var router = express.Router();
 
 router.get('/', function (req,res,netx){
-    res.render('galeria') //galeria.hbs
+    res.render('galeria',{ isGaleria: true }) //galeria.hbs
 })
 
 
