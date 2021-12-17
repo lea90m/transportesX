@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var fileUpload = require('express-fileUpload');
 
 require('dotenv').config();// para que cargue los datos del .env
 var session = require('express-session');
@@ -48,6 +49,12 @@ secured = async function (req,res,next){
     console.log(error)
   }
 }
+
+
+app.use(fileUpload({
+  useTempFiles:true,
+  tempFileDir:'/tmp/'
+}));//genera un archivo tmp antes de subir dependiendo del peso
 
 app.use('/', indexRouter);
 app.use('/nosotros', nosotrosRouter); //linea 8

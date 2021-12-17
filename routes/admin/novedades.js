@@ -1,16 +1,38 @@
 var express = require('express');
 var router = express.Router();
 var novedadesModel = require('../../models/novedadesModels');
+var util = require('util')
+var cloudinary = require('cloudinary').v2;
+const uploader = util.promisify(cloudinary.uploader.upload);
 
 router.get('/', async function(req,res,next){
     
     var novedades = await novedadesModel.getNovedades(); //query
 
+    novedades = novedades.map(novedad =>{
+        if(novedad.img_id){
+            const imagen = cloudinary.image(novedad.img_id,{
+                width:100,
+                height:100,
+                crop:'fill'
+            });
+            return{
+                ...novedad,//titulo, subtitulo y cuerpo
+                imagen // camion por ej
+            }
+        }else{
+            return{
+                ...novedad,
+                imagen:''
+        }
+    }
+    });
+
     res.render('admin/novedades',{
         layout:'admin/layout',
         usuario:req.session.nombre,
         novedades
-
+ 
     });
 });
 
@@ -28,8 +50,19 @@ router.post('/agregar', async (req,res,next) => {
     try{
         console.log(req.body);
 
+        var img_id = '';
+        if(req.files && Object.keys(req.files).length > 0 ){
+            imagen = req.files.imagen;
+            img_id = (await uploader(imagen.tempFilePath)).public_id;
+        }
+
         if (req.body.titulo != "" && req.body.subtitulo != "" && req.body.cuerpo != "" ){
-            await novedadesModel.insertNovedades(req.body);
+            // await novedadesModel.insertNovedades(req.body);
+            await novedadesModel.insertNovedades({
+                ...req.body,
+                img_id
+            })
+
             res.redirect('/admin/novedades');
         }else{
             res.render('admin/agregar',{
